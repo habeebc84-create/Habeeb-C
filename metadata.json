@@ -1,0 +1,7 @@
+{
+  "name": "Habeeb Elite - Intelligent Travel Guide",
+  "description": "A comprehensive AI-powered travel assistant that provides history, routes, costs, photography spots, and culinary guides for any destination.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
