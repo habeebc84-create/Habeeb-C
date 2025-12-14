@@ -28,8 +28,8 @@ const RouteSection: React.FC<RouteSectionProps> = ({ data, origin, labels }) => 
       // Google Flights Search
       return `https://www.google.com/travel/flights?q=Flights+to+${encodedDest}+from+${encodedOrigin}`;
     } else if (m.includes('train') || m.includes('rail')) {
-      // Rome2Rio is excellent for mixed ground transport
-      return `https://www.rome2rio.com/map/${encodedOrigin}/${encodedDest}`;
+      // Trainline for direct booking
+      return `https://www.thetrainline.com/search/${encodedOrigin}/${encodedDest}`;
     } else if (m.includes('bus')) {
       return `https://www.busbud.com/en/search/${encodedOrigin}/${encodedDest}/today/1/0/0/0/0`;
     } else {
@@ -61,6 +61,12 @@ const RouteSection: React.FC<RouteSectionProps> = ({ data, origin, labels }) => 
     window.open(url, '_blank');
   };
 
+  const openMetroSearch = () => {
+    // Search for Metro stations near the destination
+    const url = `https://www.google.com/maps/search/metro+station+near+${encodeURIComponent(data.destinationName)}`;
+    window.open(url, '_blank');
+  };
+
   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(data.destinationName)}`;
 
   return (
@@ -71,15 +77,25 @@ const RouteSection: React.FC<RouteSectionProps> = ({ data, origin, labels }) => 
            <h2 className="text-2xl font-serif font-bold text-slate-800">{labels.routesHeader}</h2>
            <p className="text-slate-500">{labels.from} {origin} -&gt; {data.destinationName}</p>
          </div>
-         <a 
-           href={googleMapsUrl} 
-           target="_blank" 
-           rel="noopener noreferrer"
-           className="inline-flex items-center gap-2 text-brand-600 font-medium hover:text-brand-800 hover:underline"
-         >
-           <MapIcon size={18} />
-           {labels.viewMap}
-         </a>
+         <div className="flex gap-2">
+           <button 
+             onClick={openMetroSearch}
+             className="inline-flex items-center gap-2 text-slate-600 font-medium hover:text-brand-600 bg-slate-100 px-3 py-2 rounded-xl transition-colors text-sm hover:bg-slate-200"
+             title="Find Metro Stations near destination"
+           >
+             <Train size={18} />
+             Find Metro
+           </button>
+           <a 
+             href={googleMapsUrl} 
+             target="_blank" 
+             rel="noopener noreferrer"
+             className="inline-flex items-center gap-2 text-brand-600 font-medium hover:text-brand-800 hover:bg-brand-50 px-3 py-2 rounded-xl transition-colors text-sm"
+           >
+             <MapIcon size={18} />
+             {labels.viewMap}
+           </a>
+         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
