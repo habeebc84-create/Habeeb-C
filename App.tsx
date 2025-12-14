@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import Hero from './components/Hero';
 import HistorySection from './components/HistorySection';
@@ -5,20 +6,45 @@ import RouteSection from './components/RouteSection';
 import AttractionsSection from './components/AttractionsSection';
 import FoodSection from './components/FoodSection';
 import MapSection from './components/MapSection';
-import HotelSection from './components/HotelSection'; // Added
-import { generateTravelGuide } from './services/geminiService';
-import { DestinationData, TranslationLabels } from './types';
-import { Compass, MapPin, History, Utensils, Camera, MapIcon, Settings, Languages, Type, Bed } from './components/Icons'; // Added Bed
+import HotelSection from './components/HotelSection';
+import { generateTravelGuide, getTrendingDestinations } from './services/geminiService';
+import { DestinationData, TranslationLabels, SuggestedDestination } from './types';
+import { Compass, MapPin, History, Utensils, Camera, MapIcon, Settings, Languages, Type, Bed, ChevronRight, DollarSign, Star, Globe } from './components/Icons';
 import { LANGUAGES, FONTS, TRANSLATIONS } from './constants';
 
+const BACKGROUND_IMAGES = [
+  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80", // Swiss Alps (Nature)
+  "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-4.0.3&auto=format&fit=crop&w=2073&q=80", // Paris (City)
+  "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2066&q=80", // Venice (Water)
+  "https://images.unsplash.com/photo-1512453979798-5ea90b7cadc9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80", // Dubai (Modern)
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2073&q=80", // Thailand (Beach)
+  "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80", // Kyoto (Culture)
+  "https://images.unsplash.com/photo-1533929736458-ca588d080e81?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"  // New York (Urban)
+];
+
+// Fallback suggestions in case API quota is hit or fails
+const DEFAULT_SUGGESTIONS: SuggestedDestination[] = [
+  { name: "Bali, Indonesia", price: "₹65,000", rating: "4.8", reason: "Season drop" },
+  { name: "Istanbul, Turkey", price: "₹78,000", rating: "4.7", reason: "Flight deals" },
+  { name: "Hanoi, Vietnam", price: "₹45,000", rating: "4.6", reason: "Budget friendly" },
+  { name: "Lisbon, Portugal", price: "₹90,000", rating: "4.9", reason: "Trending now" },
+];
+
 const App: React.FC = () => {
+  // View State for Multi-page experience
+  const [view, setView] = useState<'welcome' | 'app'>('welcome');
+  const [bgIndex, setBgIndex] = useState(0);
+
   const [data, setData] = useState<DestinationData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [origin, setOrigin] = useState<string>('');
   const [activeTab, setActiveTab] = useState('overview');
-  // Add a random seed state to refresh images on new searches
   const [imageSeed, setImageSeed] = useState<number>(Date.now());
+  
+  // Trending Suggestions State
+  const [suggestions, setSuggestions] = useState<SuggestedDestination[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   
   // Settings State
   const [language, setLanguage] = useState('en');
@@ -34,6 +60,35 @@ const App: React.FC = () => {
     root.style.setProperty('--font-sans', font.sans);
     root.style.setProperty('--font-serif', font.serif);
   }, [fontId]);
+
+  // Rotate Background Images
+  useEffect(() => {
+    if (view === 'welcome') {
+      const interval = setInterval(() => {
+        setBgIndex((prev) => (prev + 1) % BACKGROUND_IMAGES.length);
+      }, 60000); // 60 Seconds
+      return () => clearInterval(interval);
+    }
+  }, [view]);
+
+  // Fetch Daily Trending Destinations
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      try {
+        const daily = await getTrendingDestinations();
+        if (daily && daily.length > 0) {
+          setSuggestions(daily);
+        } else {
+          setSuggestions(DEFAULT_SUGGESTIONS);
+        }
+      } catch (e) {
+        setSuggestions(DEFAULT_SUGGESTIONS);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    };
+    fetchSuggestions();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -88,22 +143,128 @@ const App: React.FC = () => {
   const tabs = [
     { id: 'overview', label: labels.tabOverview, icon: <History size={18} /> },
     { id: 'journey', label: labels.tabJourney, icon: <MapIcon size={18} /> },
-    { id: 'hotels', label: labels.tabHotels, icon: <Bed size={18} /> }, // Added Hotel tab
+    { id: 'hotels', label: labels.tabHotels, icon: <Bed size={18} /> },
     { id: 'map', label: labels.tabMap, icon: <Compass size={18} /> },
     { id: 'attractions', label: labels.tabAttractions, icon: <Camera size={18} /> },
     { id: 'food', label: labels.tabFood, icon: <Utensils size={18} /> },
   ];
 
+  // Welcome / Front Page Component
+  if (view === 'welcome') {
+    return (
+      <div className="relative min-h-screen w-full overflow-hidden flex flex-col items-center justify-between font-sans">
+         {/* Background Slideshow with Glassy Blur Transition */}
+         {BACKGROUND_IMAGES.map((img, index) => (
+           <div 
+             key={index}
+             className={`absolute inset-0 z-0 transition-all duration-[2000ms] ease-in-out ${index === bgIndex ? 'opacity-100 blur-0 scale-100' : 'opacity-0 blur-2xl scale-110'}`}
+           >
+             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/80 z-10"></div>
+             <img 
+               src={img} 
+               alt="Luxury Travel Background" 
+               className={`w-full h-full object-cover transition-transform duration-[60000ms] ease-linear ${index === bgIndex ? 'scale-125' : 'scale-100'}`}
+             />
+           </div>
+         ))}
+
+         <div className="relative z-20 w-full flex-1 flex flex-col justify-center items-center px-6 text-center">
+            <div className="mb-6 animate-in slide-in-from-top-10 duration-1000">
+               <span className="bg-white/10 backdrop-blur-xl border border-white/20 text-accent-400 px-6 py-2 rounded-full text-sm font-semibold tracking-widest uppercase shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]">
+                 Premium Travel Agent
+               </span>
+            </div>
+            
+            <h1 className="text-6xl md:text-9xl font-serif font-bold text-white mb-6 drop-shadow-2xl animate-in zoom-in-90 duration-1000 delay-200 tracking-tight">
+               <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-400 to-amber-200">Elite</span>
+            </h1>
+            
+            <p className="text-xl md:text-2xl text-white/90 font-light max-w-2xl mx-auto mb-12 animate-in slide-in-from-bottom-8 duration-1000 delay-500 drop-shadow-lg leading-relaxed mix-blend-overlay">
+               Where your searching and bookings comes to your finger tips with easy way.
+            </p>
+
+            <button
+               onClick={() => setView('app')}
+               className="group relative inline-flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/30 text-white px-10 py-5 rounded-full text-lg font-bold tracking-wide transition-all hover:bg-white/20 hover:scale-105 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-700"
+            >
+               Enter Experience
+               <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+         </div>
+
+         {/* Suggested Places / Footer Area */}
+         <div className="relative z-20 w-full max-w-7xl mx-auto px-6 pb-8 animate-in slide-in-from-bottom-20 duration-1000 delay-1000">
+            <div className="flex items-center justify-between mb-4 text-white">
+               <div>
+                 <h3 className="font-serif text-xl md:text-2xl drop-shadow-md">Daily Affordable Getaways</h3>
+                 <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-medium">
+                   <Globe size={12} />
+                   Curated from 100+ articles & sources today
+                 </div>
+               </div>
+               <div className="text-sm opacity-70 text-right">
+                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+               </div>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+               {loadingSuggestions 
+                  ? Array(4).fill(0).map((_, idx) => (
+                      <div key={idx} className="h-40 rounded-2xl bg-white/10 backdrop-blur-lg animate-pulse border border-white/5"></div>
+                    ))
+                  : suggestions.map((dest, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => {
+                       setView('app');
+                       // In a real app we might pre-fill the destination here
+                    }}
+                    className="group relative h-40 rounded-2xl overflow-hidden border border-white/20 backdrop-blur-lg bg-white/5 hover:bg-white/10 transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] text-left"
+                  >
+                     <img 
+                       // Use a hash of the name to pick a stable random image from the background list + extra generic ones
+                       src={`https://picsum.photos/seed/${dest.name.replace(/\s/g,'')}${new Date().getDate()}/400/300`} 
+                       alt={dest.name} 
+                       className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" 
+                     />
+                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent p-4 flex flex-col justify-end">
+                        <div className="flex justify-between items-end">
+                           <div className="flex-1 mr-2">
+                              <div className="font-bold text-white text-lg leading-tight mb-0.5 drop-shadow-sm line-clamp-1">{dest.name}</div>
+                              <div className="text-[10px] text-white/80 leading-tight line-clamp-1 mb-1">{dest.reason}</div>
+                              <div className="flex items-center gap-1 text-accent-400 text-xs font-bold">
+                                 <Star size={10} fill="currentColor" />
+                                 {dest.rating}
+                              </div>
+                           </div>
+                           <div className="text-emerald-300 font-bold bg-emerald-950/60 px-2 py-1 rounded-lg text-xs backdrop-blur-md border border-emerald-500/30 whitespace-nowrap">
+                              {dest.price}
+                           </div>
+                        </div>
+                     </div>
+                  </button>
+               ))}
+            </div>
+            
+            <div className="text-center text-white/40 text-xs mt-8 font-light tracking-wider">
+               Powered by Gemini AI • Premium Travel Solutions
+            </div>
+         </div>
+      </div>
+    );
+  }
+
+  // Main Application
   return (
-    <div className="min-h-screen pb-20 font-sans">
+    <div className="min-h-screen pb-20 font-sans animate-in fade-in duration-500">
       
       {/* Header / Nav */}
       <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-white/20 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <button onClick={() => setView('welcome')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Compass className="text-accent-500" size={28} />
             <span className="font-serif font-bold text-xl text-slate-800 tracking-tight">Habeeb <span className="text-accent-500">Elite</span></span>
-          </div>
+          </button>
           
           <div className="flex items-center gap-4">
              {/* Settings Dropdown */}
@@ -163,7 +324,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Hero */}
+      {/* Hero (Search Interface) */}
       <div className="pt-16">
         <Hero onSearch={handleSearch} isLoading={loading} labels={labels} />
       </div>
@@ -214,7 +375,6 @@ const App: React.FC = () => {
               {activeTab === 'journey' && <RouteSection data={data} origin={origin} labels={labels} />}
               {activeTab === 'hotels' && <HotelSection data={data} labels={labels} />}
               {activeTab === 'map' && <MapSection data={data} labels={labels} />}
-              {/* Pass the imageSeed to AttractionsSection to randomize images */}
               {activeTab === 'attractions' && <AttractionsSection data={data} labels={labels} randomSeed={imageSeed} />}
               {activeTab === 'food' && <FoodSection data={data} labels={labels} />}
             </div>

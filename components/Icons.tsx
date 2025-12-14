@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   MapPin, 
@@ -25,7 +26,21 @@ import {
   SlidersHorizontal,
   X,
   ZoomIn,
-  Image as ImageIcon
+  Image as ImageIcon,
+  MessageSquare,
+  Send,
+  User,
+  ThumbsUp,
+  Wifi,
+  Waves,
+  Dumbbell,
+  Coffee,
+  CircleParking,
+  Tv,
+  Sunrise,
+  Sun,
+  Moon,
+  Globe
 } from 'lucide-react';
 
 export { 
@@ -54,5 +69,19 @@ export {
   SlidersHorizontal,
   X,
   ZoomIn,
-  ImageIcon
+  ImageIcon,
+  MessageSquare,
+  Send,
+  User,
+  ThumbsUp,
+  Wifi,
+  Waves,
+  Dumbbell,
+  Coffee,
+  CircleParking,
+  Tv,
+  Sunrise,
+  Sun,
+  Moon,
+  Globe
 };

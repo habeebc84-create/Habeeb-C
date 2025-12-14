@@ -1,3 +1,4 @@
+
 import { TranslationLabels } from "./types";
 
 export const LANGUAGES = [
@@ -20,8 +21,8 @@ export const FONTS = [
 
 export const TRANSLATIONS: Record<string, TranslationLabels> = {
   en: {
-    heroTitle: "Discover Your Next",
-    heroSubtitle: "Your intelligent guide to history, routes, hidden spots, and culinary delights.",
+    heroTitle: "Welcome to Habeeb Elite",
+    heroSubtitle: "Where your searching and bookings comes to your finger tips with easy way.",
     fromPlaceholder: "From (Origin)",
     toPlaceholder: "To (Destination)",
     exploreButton: "Explore",
@@ -64,8 +65,8 @@ export const TRANSLATIONS: Record<string, TranslationLabels> = {
     fontEditorial: "Editorial"
   },
   es: {
-    heroTitle: "Descubre tu Próxima",
-    heroSubtitle: "Tu guía inteligente de historia, rutas, lugares ocultos y delicias culinarias.",
+    heroTitle: "Bienvenido a Habeeb Elite",
+    heroSubtitle: "Donde sus búsquedas y reservas están al alcance de su mano de forma fácil.",
     fromPlaceholder: "Desde (Origen)",
     toPlaceholder: "A (Destino)",
     exploreButton: "Explorar",
@@ -108,8 +109,8 @@ export const TRANSLATIONS: Record<string, TranslationLabels> = {
     fontEditorial: "Editorial"
   },
   fr: {
-    heroTitle: "Découvrez Votre Prochaine",
-    heroSubtitle: "Votre guide intelligent pour l'histoire, les itinéraires, les lieux cachés et les délices culinaires.",
+    heroTitle: "Bienvenue chez Habeeb Elite",
+    heroSubtitle: "Où vos recherches et réservations sont à portée de main en toute simplicité.",
     fromPlaceholder: "De (Origine)",
     toPlaceholder: "À (Destination)",
     exploreButton: "Explorer",
@@ -152,8 +153,8 @@ export const TRANSLATIONS: Record<string, TranslationLabels> = {
     fontEditorial: "Éditorial"
   },
   de: {
-    heroTitle: "Entdecken Sie Ihr Nächstes",
-    heroSubtitle: "Ihr intelligenter Reiseführer für Geschichte, Routen, versteckte Orte und kulinarische Köstlichkeiten.",
+    heroTitle: "Willkommen bei Habeeb Elite",
+    heroSubtitle: "Wo Suchen und Buchen einfach und bequem in Ihre Hände gelegt wird.",
     fromPlaceholder: "Von (Ursprung)",
     toPlaceholder: "Nach (Ziel)",
     exploreButton: "Erkunden",
@@ -196,8 +197,8 @@ export const TRANSLATIONS: Record<string, TranslationLabels> = {
     fontEditorial: "Redaktionell"
   },
   it: {
-    heroTitle: "Scopri la Tua Prossima",
-    heroSubtitle: "La tua guida intelligente per storia, percorsi, luoghi nascosti e delizie culinaires.",
+    heroTitle: "Benvenuti a Habeeb Elite",
+    heroSubtitle: "Dove la ricerca e la prenotazione sono a portata di mano in modo semplice.",
     fromPlaceholder: "Da (Origine)",
     toPlaceholder: "A (Destinazione)",
     exploreButton: "Esplora",
@@ -240,8 +241,8 @@ export const TRANSLATIONS: Record<string, TranslationLabels> = {
     fontEditorial: "Editoriale"
   },
   pt: {
-    heroTitle: "Descubra Sua Próxima",
-    heroSubtitle: "Seu guia inteligente de história, rotas, lugares escondidos e delícias culinárias.",
+    heroTitle: "Bem-vindo ao Habeeb Elite",
+    heroSubtitle: "Onde sua pesquisa e reservas estão ao seu alcance de forma fácil.",
     fromPlaceholder: "De (Origem)",
     toPlaceholder: "Para (Destino)",
     exploreButton: "Explorar",
@@ -284,8 +285,8 @@ export const TRANSLATIONS: Record<string, TranslationLabels> = {
     fontEditorial: "Editorial"
   },
   zh: {
-    heroTitle: "发现您的下一次",
-    heroSubtitle: "您的历史、路线、隐秘景点和美食的智能指南。",
+    heroTitle: "欢迎来到 Habeeb Elite",
+    heroSubtitle: "让您的搜索和预订变得触手可及，轻松便捷。",
     fromPlaceholder: "从 (出发地)",
     toPlaceholder: "到 (目的地)",
     exploreButton: "探索",
@@ -328,8 +329,8 @@ export const TRANSLATIONS: Record<string, TranslationLabels> = {
     fontEditorial: "编辑风格"
   },
   ja: {
-    heroTitle: "次の冒険を発見しよう",
-    heroSubtitle: "歴史、ルート、隠れた名所、そして美食のためのインテリジェントな旅行ガイド。",
+    heroTitle: "Habeeb Eliteへようこそ",
+    heroSubtitle: "検索と予約が指先ひとつで簡単にできる場所。",
     fromPlaceholder: "出発地",
     toPlaceholder: "目的地",
     exploreButton: "探索する",

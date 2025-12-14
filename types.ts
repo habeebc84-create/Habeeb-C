@@ -1,3 +1,4 @@
+
 export interface Coordinates {
   lat: number;
   lng: number;
@@ -30,6 +31,8 @@ export interface Dish {
   name: string;
   description: string;
   bestPlaceToTry: string;
+  priceRange: string; // Added price
+  category: 'Breakfast' | 'Lunch' | 'Dinner'; // Added category
   coordinates: Coordinates;
 }
 
@@ -39,6 +42,7 @@ export interface Hotel {
   rating: string;
   priceEstimate: string;
   description: string;
+  amenities: string[]; 
 }
 
 export interface DestinationData {
@@ -51,11 +55,18 @@ export interface DestinationData {
   coordinates: Coordinates;
   originCoordinates: Coordinates;
   routes: TravelRoute[];
-  hotels: Hotel[]; // Added hotels
+  hotels: Hotel[];
   topAttractions: Attraction[];
   photographySpots: PhotoSpot[];
   culinaryDelights: Dish[];
   travelTips: string[];
+}
+
+export interface SuggestedDestination {
+  name: string;
+  price: string;
+  rating: string;
+  reason: string;
 }
 
 export interface TranslationLabels {
@@ -68,7 +79,7 @@ export interface TranslationLabels {
   
   tabOverview: string;
   tabJourney: string;
-  tabHotels: string; // Added
+  tabHotels: string;
   tabMap: string;
   tabAttractions: string;
   tabFood: string;
@@ -84,11 +95,11 @@ export interface TranslationLabels {
   travelTipTitle: string;
   travelTipText: string;
 
-  hotelsHeader: string; // Added
-  bookRoom: string; // Added
-  budgetStays: string; // Added
-  luxuryStays: string; // Added
-  priceFilterLabel: string; // Added
+  hotelsHeader: string;
+  bookRoom: string;
+  budgetStays: string;
+  luxuryStays: string;
+  priceFilterLabel: string;
 
   mapHeader: string;
   mapSubtext: string;
