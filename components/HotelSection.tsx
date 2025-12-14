@@ -1,7 +1,8 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Bed, Star, ChevronRight, DollarSign, SlidersHorizontal, ZoomIn, X, ChevronLeft, ImageIcon, MessageSquare, User, Send, ThumbsUp, Wifi, Waves, Dumbbell, Coffee, CircleParking, Tv } from './Icons';
-import { DestinationData, TranslationLabels, Hotel } from '../types';
+import { Bed, Star, ChevronRight, DollarSign, SlidersHorizontal, ZoomIn, X, ChevronLeft, ImageIcon, MessageSquare, User, Send, ThumbsUp, Wifi, Waves, Dumbbell, Coffee, CircleParking, Tv, Car, Bus } from './Icons';
+import { DestinationData, TranslationLabels, Hotel, Review, Coordinates } from '../types';
+import { getHotelReviews } from '../services/geminiService';
 
 interface HotelSectionProps {
   data: DestinationData;
@@ -13,31 +14,45 @@ interface ParsedHotel extends Hotel {
   parsedPrice: number;
 }
 
-interface Review {
-  id: number;
-  author: string;
-  rating: number;
-  date: string;
-  comment: string;
-  likes: number;
-}
-
 const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [activeModalTab, setActiveModalTab] = useState<'gallery' | 'reviews'>('gallery');
   
-  // Fake database of reviews (in real app, this would be fetched)
+  // Real database of reviews fetched from API
   const [reviews, setReviews] = useState<Record<string, Review[]>>({});
+  const [loadingReviews, setLoadingReviews] = useState<Record<string, boolean>>({});
   
   // Review Form State
   const [newReviewAuthor, setNewReviewAuthor] = useState('');
   const [newReviewComment, setNewReviewComment] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
 
+  // Haptic Feedback Helper
+  const triggerHaptic = (pattern: number | number[] = 10) => {
+    if (navigator.vibrate) {
+      navigator.vibrate(pattern);
+    }
+  };
+
   const getBookingUrl = (hotelName: string, destination: string) => {
     const query = encodeURIComponent(`${hotelName} ${destination}`);
     return `https://www.booking.com/searchresults.html?ss=${query}`;
+  };
+
+  const openUber = (coords: Coordinates, name: string) => {
+    triggerHaptic(15);
+    // Uber Universal Link with Dropoff Lat/Lng
+    // If we don't know current location, we leave 'pickup=my_location' which is default behavior
+    const url = `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=${coords.lat}&dropoff[longitude]=${coords.lng}&dropoff[nickname]=${encodeURIComponent(name)}`;
+    window.open(url, '_blank');
+  };
+
+  const openTransitRoute = (coords: Coordinates) => {
+    triggerHaptic(15);
+    // Google Maps Transit Mode
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${coords.lat},${coords.lng}&travelmode=transit`;
+    window.open(url, '_blank');
   };
 
   const getCurrencySymbol = (priceStr: string) => {
@@ -104,24 +119,29 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
   const budgetHotels = filteredHotels.filter(h => h.category === 'Budget');
   const luxuryHotels = filteredHotels.filter(h => h.category === 'Luxury');
 
-  const openDetails = (hotel: Hotel) => {
+  const openDetails = async (hotel: Hotel) => {
+    triggerHaptic(20); // Light tap on open
     setSelectedHotel(hotel);
     setCurrentImageIndex(0);
     setActiveModalTab('gallery');
     document.body.style.overflow = 'hidden';
 
-    // Initialize random reviews for this hotel if not exist
+    // Fetch reviews if not already loaded
     if (!reviews[hotel.name]) {
-      const initialReviews: Review[] = [
-        { id: 1, author: "Alex J.", rating: 5, date: "2 months ago", comment: "Absolutely stunning views and great service. Worth every penny!", likes: 12 },
-        { id: 2, author: "Sarah M.", rating: 4, date: "3 months ago", comment: "Clean rooms and good location. Breakfast was a bit repetitive though.", likes: 4 },
-        { id: 3, author: "Mike T.", rating: 5, date: "1 week ago", comment: "Best stay of our trip. Highly recommend!", likes: 8 }
-      ];
-      setReviews(prev => ({ ...prev, [hotel.name]: initialReviews }));
+      setLoadingReviews(prev => ({ ...prev, [hotel.name]: true }));
+      try {
+        const fetchedReviews = await getHotelReviews(hotel.name, data.destinationName);
+        setReviews(prev => ({ ...prev, [hotel.name]: fetchedReviews }));
+      } catch (e) {
+        console.error("Error fetching reviews", e);
+      } finally {
+        setLoadingReviews(prev => ({ ...prev, [hotel.name]: false }));
+      }
     }
   };
 
   const closeDetails = () => {
+    triggerHaptic(10);
     setSelectedHotel(null);
     document.body.style.overflow = 'unset';
     setNewReviewAuthor('');
@@ -131,10 +151,11 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
 
   const handleSubmitReview = (e: React.FormEvent) => {
     e.preventDefault();
+    triggerHaptic([10, 30]); // Double tap on submit success
     if (!selectedHotel || !newReviewAuthor.trim() || !newReviewComment.trim()) return;
 
     const newReview: Review = {
-      id: Date.now(),
+      id: Date.now().toString(),
       author: newReviewAuthor,
       rating: newReviewRating,
       date: "Just now",
@@ -152,19 +173,49 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
     setNewReviewRating(5);
   };
 
+  const handleLikeReview = (reviewId: string) => {
+    triggerHaptic(15);
+    if (!selectedHotel) return;
+    
+    setReviews(prev => ({
+      ...prev,
+      [selectedHotel.name]: prev[selectedHotel.name].map(r => 
+        r.id === reviewId ? { ...r, likes: r.likes + 1 } : r
+      )
+    }));
+  };
+
+  const switchTab = (tab: 'gallery' | 'reviews') => {
+    triggerHaptic(10);
+    setActiveModalTab(tab);
+  };
+
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
+    triggerHaptic(5);
     setCurrentImageIndex((prev) => (prev + 1) % 3);
   };
 
   const prevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
+    triggerHaptic(5);
     setCurrentImageIndex((prev) => (prev === 0 ? 2 : prev - 1));
   };
 
   const renderHotelCard = (hotel: ParsedHotel, index: number) => {
     const imageSeed = hotel.name.replace(/\s/g, '');
     const mainImageUrl = `https://picsum.photos/seed/${imageSeed}/800/600`;
+    
+    // Shorten description
+    const shortDescription = hotel.description
+      .split(/(\.|\?|\!)\s+/)
+      .slice(0, 4)
+      .join('')
+      .trim() + (hotel.description.length > 100 ? (hotel.description.slice(-1) !== '.' ? '.' : '') : '');
+
+    const finalDescription = shortDescription.length > 200 
+      ? hotel.description.substring(0, 180) + "..." 
+      : shortDescription;
 
     return (
       <div key={index} className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 transition-all hover:shadow-xl flex flex-col h-full animate-in fade-in zoom-in-95 duration-300">
@@ -198,7 +249,7 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
               </div>
           </div>
           
-          <p className="text-slate-600 text-sm mb-4 flex-1">{hotel.description}</p>
+          <p className="text-slate-600 text-sm mb-4 flex-1">{finalDescription}</p>
           
           {/* Amenities Grid */}
           {hotel.amenities && hotel.amenities.length > 0 && (
@@ -217,15 +268,38 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
               {hotel.priceEstimate} / night
           </div>
 
-          <a 
-              href={getBookingUrl(hotel.name, data.destinationName)}
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="mt-auto w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold bg-brand-600 text-white hover:bg-brand-700 transition-colors shadow-sm"
-          >
-              {labels.bookRoom}
-              <ChevronRight size={16} />
-          </a>
+          <div className="mt-auto grid grid-cols-2 gap-2">
+            {hotel.coordinates && (
+              <>
+                 <button
+                    onClick={() => openUber(hotel.coordinates, hotel.name)}
+                    className="flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+                    title="Book Ride"
+                  >
+                    <Car size={14} />
+                    Book Cab
+                  </button>
+                  <button
+                    onClick={() => openTransitRoute(hotel.coordinates)}
+                    className="flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                    title="Public Transit"
+                  >
+                    <Bus size={14} />
+                    Bus Route
+                  </button>
+              </>
+            )}
+            <a 
+                href={getBookingUrl(hotel.name, data.destinationName)}
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={() => triggerHaptic(15)}
+                className={`col-span-2 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold bg-brand-600 text-white hover:bg-brand-700 transition-colors shadow-sm ${!hotel.coordinates ? 'col-span-2' : ''}`}
+            >
+                {labels.bookRoom}
+                <ChevronRight size={16} />
+            </a>
+          </div>
         </div>
       </div>
     );
@@ -261,7 +335,10 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
               max={maxDataPrice}
               step={10}
               value={priceFilter}
-              onChange={(e) => setPriceFilter(Number(e.target.value))}
+              onChange={(e) => {
+                setPriceFilter(Number(e.target.value));
+                if (Number(e.target.value) % 50 === 0) triggerHaptic(5); // Tactile feedback on slider
+              }}
               className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
             />
             
@@ -327,14 +404,14 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
                 </div>
                 <div className="flex gap-2 bg-slate-100 p-1 rounded-lg">
                   <button 
-                    onClick={() => setActiveModalTab('gallery')}
+                    onClick={() => switchTab('gallery')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeModalTab === 'gallery' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
                   >
                     <ImageIcon size={16} />
                     Gallery
                   </button>
                   <button 
-                    onClick={() => setActiveModalTab('reviews')}
+                    onClick={() => switchTab('reviews')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${activeModalTab === 'reviews' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
                   >
                     <MessageSquare size={16} />
@@ -372,7 +449,10 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
                      {[0, 1, 2].map((idx) => (
                        <button
                          key={idx}
-                         onClick={() => setCurrentImageIndex(idx)}
+                         onClick={() => {
+                           triggerHaptic(5);
+                           setCurrentImageIndex(idx);
+                         }}
                          className={`w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${currentImageIndex === idx ? 'border-brand-500' : 'border-transparent opacity-60'}`}
                        >
                          <img 
@@ -396,6 +476,12 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
                                 </div>
                             ))}
                         </div>
+                        
+                        {/* Full Description in Modal */}
+                        <div className="mt-6">
+                           <h4 className="font-bold text-slate-800 mb-2">About this hotel</h4>
+                           <p className="text-slate-600 leading-relaxed">{selectedHotel.description}</p>
+                        </div>
                      </div>
                    )}
                  </div>
@@ -418,8 +504,11 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
                              <button
                                type="button"
                                key={star}
-                               onClick={() => setNewReviewRating(star)}
-                               className="focus:outline-none transition-transform hover:scale-110"
+                               onClick={() => {
+                                 triggerHaptic(5);
+                                 setNewReviewRating(star);
+                               }}
+                               className="focus:outline-none transition-transform hover:scale-110 active:scale-95"
                              >
                                <Star 
                                  size={24} 
@@ -450,7 +539,7 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
                        
                        <button 
                          type="submit"
-                         className="w-full bg-slate-900 text-white font-semibold py-2.5 rounded-xl hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                         className="w-full bg-slate-900 text-white font-semibold py-2.5 rounded-xl hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 active:scale-95"
                        >
                          <Send size={16} />
                          Post Review
@@ -460,33 +549,66 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
 
                    {/* Review List */}
                    <div className="space-y-4">
-                     <h3 className="font-bold text-slate-800">Recent Reviews ({reviews[selectedHotel.name]?.length || 0})</h3>
-                     {reviews[selectedHotel.name]?.map((review) => (
-                       <div key={review.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-                         <div className="flex justify-between items-start mb-2">
-                           <div className="flex items-center gap-2">
-                             <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                               <User size={16} />
+                     <div className="flex items-center gap-2">
+                       <h3 className="font-bold text-slate-800">Verified Reviews</h3>
+                       {loadingReviews[selectedHotel.name] && (
+                         <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                       )}
+                     </div>
+
+                     {loadingReviews[selectedHotel.name] ? (
+                       <div className="space-y-4 opacity-50">
+                         {[1, 2, 3].map(i => (
+                           <div key={i} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 animate-pulse">
+                             <div className="flex gap-3 mb-3">
+                               <div className="w-8 h-8 rounded-full bg-slate-200"></div>
+                               <div className="space-y-2 flex-1">
+                                 <div className="h-3 bg-slate-200 rounded w-1/4"></div>
+                                 <div className="h-2 bg-slate-200 rounded w-1/6"></div>
+                               </div>
                              </div>
-                             <div>
-                               <p className="font-bold text-slate-800 text-sm">{review.author}</p>
-                               <p className="text-xs text-slate-400">{review.date}</p>
+                             <div className="space-y-2">
+                               <div className="h-2 bg-slate-200 rounded w-full"></div>
+                               <div className="h-2 bg-slate-200 rounded w-5/6"></div>
                              </div>
                            </div>
-                           <div className="flex items-center gap-0.5 bg-amber-50 text-amber-600 px-2 py-0.5 rounded-md text-xs font-bold">
-                             <Star size={10} fill="currentColor" />
-                             {review.rating}
-                           </div>
-                         </div>
-                         <p className="text-slate-600 text-sm leading-relaxed mb-3">{review.comment}</p>
-                         <div className="flex items-center gap-4 border-t border-slate-50 pt-3">
-                           <button className="flex items-center gap-1.5 text-slate-400 hover:text-brand-600 text-xs font-medium transition-colors">
-                             <ThumbsUp size={14} />
-                             Helpful ({review.likes})
-                           </button>
-                         </div>
+                         ))}
                        </div>
-                     ))}
+                     ) : (
+                       reviews[selectedHotel.name]?.length > 0 ? (
+                         reviews[selectedHotel.name].map((review) => (
+                           <div key={review.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 animate-in slide-in-from-bottom-2 duration-300">
+                             <div className="flex justify-between items-start mb-2">
+                               <div className="flex items-center gap-2">
+                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-100 to-indigo-100 flex items-center justify-center text-brand-600">
+                                   <User size={16} />
+                                 </div>
+                                 <div>
+                                   <p className="font-bold text-slate-800 text-sm">{review.author}</p>
+                                   <p className="text-xs text-slate-400">{review.date}</p>
+                                 </div>
+                               </div>
+                               <div className="flex items-center gap-0.5 bg-amber-50 text-amber-600 px-2 py-0.5 rounded-md text-xs font-bold">
+                                 <Star size={10} fill="currentColor" />
+                                 {review.rating}
+                               </div>
+                             </div>
+                             <p className="text-slate-600 text-sm leading-relaxed mb-3">{review.comment}</p>
+                             <div className="flex items-center gap-4 border-t border-slate-50 pt-3">
+                               <button 
+                                 onClick={() => handleLikeReview(review.id)}
+                                 className="flex items-center gap-1.5 text-slate-400 hover:text-brand-600 text-xs font-medium transition-colors group"
+                               >
+                                 <ThumbsUp size={14} className="group-hover:scale-110 transition-transform" />
+                                 Helpful ({review.likes})
+                               </button>
+                             </div>
+                           </div>
+                         ))
+                       ) : (
+                         <div className="text-center py-8 text-slate-400 italic">No reviews yet. Be the first to review!</div>
+                       )
+                     )}
                    </div>
 
                  </div>

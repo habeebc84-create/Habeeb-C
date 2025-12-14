@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { DestinationData, SuggestedDestination } from "../types";
+import { DestinationData, SuggestedDestination, Review } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -53,6 +53,59 @@ export const getTrendingDestinations = async (): Promise<SuggestedDestination[]>
   }
 };
 
+export const getHotelReviews = async (hotelName: string, destination: string): Promise<Review[]> => {
+  const model = "gemini-2.5-flash";
+  const prompt = `
+    Act as a travel review aggregator platform.
+    Generate 5 realistic user reviews for the hotel "${hotelName}" in "${destination}".
+    
+    Requirements:
+    - Reviews should sound authentic, with a mix of positive (mostly) and slightly critical feedback to make them realistic.
+    - Vary the dates (relative time, e.g., "2 days ago", "1 month ago").
+    - Generate realistic user names.
+    - Ratings should be between 3.5 and 5.0.
+    
+    Return a JSON array of objects with the following structure:
+    - id: string (unique)
+    - author: string (full name)
+    - rating: number (1-5)
+    - date: string
+    - comment: string (2-3 sentences)
+    - likes: number (0-50)
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              id: { type: Type.STRING },
+              author: { type: Type.STRING },
+              rating: { type: Type.NUMBER },
+              date: { type: Type.STRING },
+              comment: { type: Type.STRING },
+              likes: { type: Type.NUMBER }
+            }
+          }
+        }
+      }
+    });
+
+    const text = response.text;
+    if (!text) return [];
+    return JSON.parse(text) as Review[];
+  } catch (error) {
+    console.error("Failed to fetch hotel reviews:", error);
+    return [];
+  }
+};
+
 export const generateTravelGuide = async (destination: string, origin: string, languageName: string = 'English'): Promise<DestinationData> => {
   const model = "gemini-2.5-flash";
 
@@ -76,6 +129,7 @@ export const generateTravelGuide = async (destination: string, origin: string, l
        - 2 "Luxury" options (4-5 Star Hotels).
        - Provide rating (e.g., "4.5/5") and price estimate per night primarily in INR (₹). Example: "₹9,900 ($120)".
        - List 3-4 key amenities for each hotel (e.g., "WiFi", "Pool", "Gym", "Breakfast").
+       - **CRITICAL**: Provide precise latitude and longitude coordinates for each hotel.
     5. COORDINATES: Accurately provide the latitude and longitude for the destination, the origin, and all specific attractions/spots.
     6. Top tourist attractions with their locations. Keep descriptions detailed but concise (2-3 sentences).
     7. Specific "Camera Places" (Photography spots) with tips on angles and locations.
@@ -144,7 +198,14 @@ export const generateTravelGuide = async (destination: string, origin: string, l
                   rating: { type: Type.STRING },
                   priceEstimate: { type: Type.STRING },
                   description: { type: Type.STRING },
-                  amenities: { type: Type.ARRAY, items: { type: Type.STRING } }
+                  amenities: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  coordinates: {
+                    type: Type.OBJECT,
+                    properties: {
+                      lat: { type: Type.NUMBER },
+                      lng: { type: Type.NUMBER }
+                    }
+                  }
                 }
               }
             },

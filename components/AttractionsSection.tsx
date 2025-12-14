@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
-import { Camera, Clock } from './Icons';
-import { DestinationData, TranslationLabels } from '../types';
+import { Camera, Clock, Car, Bus } from './Icons';
+import { DestinationData, TranslationLabels, Coordinates } from '../types';
 
 interface AttractionsSectionProps {
   data: DestinationData;
@@ -10,6 +11,18 @@ interface AttractionsSectionProps {
 
 const AttractionsSection: React.FC<AttractionsSectionProps> = ({ data, labels, randomSeed }) => {
   const [activeTab, setActiveTab] = useState<'all' | 'camera'>('all');
+
+  const openUber = (coords: Coordinates, name: string) => {
+    // Uber Universal Link with Dropoff Lat/Lng
+    const url = `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=${coords.lat}&dropoff[longitude]=${coords.lng}&dropoff[nickname]=${encodeURIComponent(name)}`;
+    window.open(url, '_blank');
+  };
+
+  const openTransitRoute = (coords: Coordinates) => {
+    // Google Maps Transit Mode
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${coords.lat},${coords.lng}&travelmode=transit`;
+    window.open(url, '_blank');
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -55,9 +68,28 @@ const AttractionsSection: React.FC<AttractionsSectionProps> = ({ data, labels, r
                 <h3 className="text-lg font-bold text-slate-800 group-hover:text-brand-600 transition-colors">{spot.name}</h3>
               </div>
               <p className="text-slate-600 text-sm mb-4 flex-1">{spot.description}</p>
-              <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg">
+              
+              <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg mb-4">
                 <Clock size={14} />
                 <span>{spot.bestTime}</span>
+              </div>
+
+              {/* Transport Buttons */}
+              <div className="grid grid-cols-2 gap-2 mt-auto">
+                <button
+                   onClick={() => openUber(spot.coordinates, spot.name)}
+                   className="flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+                >
+                   <Car size={14} />
+                   Book Ride
+                </button>
+                <button
+                   onClick={() => openTransitRoute(spot.coordinates)}
+                   className="flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                >
+                   <Bus size={14} />
+                   Transit
+                </button>
               </div>
             </div>
           </div>
@@ -86,9 +118,27 @@ const AttractionsSection: React.FC<AttractionsSectionProps> = ({ data, labels, r
                 <div className="p-6 flex-1 flex flex-col">
                   <h3 className="text-lg font-bold text-slate-800 mb-2">{spot.name}</h3>
                   <p className="text-slate-600 text-sm mb-4 flex-1">{spot.description}</p>
-                  <div className="bg-rose-50 text-rose-800 text-xs p-3 rounded-xl border border-rose-100 italic">
+                  <div className="bg-rose-50 text-rose-800 text-xs p-3 rounded-xl border border-rose-100 italic mb-4">
                     <span className="font-bold not-italic mr-1">💡 {labels.proTip}:</span>
                     "{spot.bestAngle}"
+                  </div>
+                  
+                  {/* Transport Buttons for Camera Spots */}
+                  <div className="grid grid-cols-2 gap-2 mt-auto">
+                    <button
+                       onClick={() => openUber(spot.coordinates, spot.name)}
+                       className="flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+                    >
+                       <Car size={14} />
+                       Ride Here
+                    </button>
+                    <button
+                       onClick={() => openTransitRoute(spot.coordinates)}
+                       className="flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                    >
+                       <Bus size={14} />
+                       Bus Route
+                    </button>
                   </div>
                 </div>
               </div>

@@ -43,6 +43,7 @@ export interface Hotel {
   priceEstimate: string;
   description: string;
   amenities: string[]; 
+  coordinates: Coordinates;
 }
 
 export interface DestinationData {
@@ -67,6 +68,15 @@ export interface SuggestedDestination {
   price: string;
   rating: string;
   reason: string;
+}
+
+export interface Review {
+  id: string;
+  author: string;
+  rating: number;
+  date: string;
+  comment: string;
+  likes: number;
 }
 
 export interface TranslationLabels {

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Utensils, Sunrise, Sun, Moon, DollarSign, MapPin } from './Icons';
-import { DestinationData, TranslationLabels, Dish } from '../types';
+import { Utensils, Sunrise, Sun, Moon, DollarSign, MapPin, Car, Bus } from './Icons';
+import { DestinationData, TranslationLabels, Dish, Coordinates } from '../types';
 
 interface FoodSectionProps {
   data: DestinationData;
@@ -14,6 +14,16 @@ const FoodSection: React.FC<FoodSectionProps> = ({ data, labels }) => {
   const filteredFood = data.culinaryDelights.filter(
     (dish) => dish.category === activeCategory
   );
+
+  const openUber = (coords: Coordinates, name: string) => {
+    const url = `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=${coords.lat}&dropoff[longitude]=${coords.lng}&dropoff[nickname]=${encodeURIComponent(name)}`;
+    window.open(url, '_blank');
+  };
+
+  const openTransitRoute = (coords: Coordinates) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${coords.lat},${coords.lng}&travelmode=transit`;
+    window.open(url, '_blank');
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -77,7 +87,7 @@ const FoodSection: React.FC<FoodSectionProps> = ({ data, labels }) => {
                   <p className="text-slate-600 text-sm mb-3 line-clamp-2">{dish.description}</p>
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-3 mt-2">
+                <div className="flex flex-wrap items-center gap-3 mt-2 mb-4">
                   <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-100">
                     <MapPin size={12} className="text-slate-400"/>
                     {dish.bestPlaceToTry}
@@ -89,6 +99,24 @@ const FoodSection: React.FC<FoodSectionProps> = ({ data, labels }) => {
                       {dish.priceRange}
                     </div>
                   )}
+                </div>
+
+                {/* Transport Buttons */}
+                <div className="flex gap-2 mt-auto">
+                    <button
+                       onClick={() => openUber(dish.coordinates, dish.name)}
+                       className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+                    >
+                       <Car size={14} />
+                       Cab
+                    </button>
+                    <button
+                       onClick={() => openTransitRoute(dish.coordinates)}
+                       className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                    >
+                       <Bus size={14} />
+                       Bus
+                    </button>
                 </div>
               </div>
             </div>
