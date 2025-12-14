@@ -13,7 +13,7 @@ const POPULAR_CITIES = [
   { name: 'London, UK', image: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=400&q=80' },
   { name: 'Tokyo, Japan', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=400&q=80' },
   { name: 'New York, USA', image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=400&q=80' },
-  { name: 'Dubai, UAE', image: 'https://images.unsplash.com/photo-1512453979798-5ea90b7cadc9?auto=format&fit=crop&w=400&q=80' },
+  { name: 'Dubai, UAE', image: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=400&q=80' },
 ];
 
 const Hero: React.FC<HeroProps> = ({ onSearch, isLoading, labels }) => {
@@ -111,7 +111,7 @@ const Hero: React.FC<HeroProps> = ({ onSearch, isLoading, labels }) => {
         
         <div className="text-center max-w-4xl mb-12">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-5 py-2 text-white text-sm font-semibold mb-8 animate-in slide-in-from-top-4 duration-700 shadow-xl">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full px-5 py-2 text-white text-sm font-semibold mb-8 animate-in slide-in-from-top-4 duration-700 shadow-xl">
              <Compass size={16} className="text-accent-500" />
              <span className="tracking-wide uppercase">AI-Powered Premium Travel</span>
           </div>
@@ -125,26 +125,26 @@ const Hero: React.FC<HeroProps> = ({ onSearch, isLoading, labels }) => {
           </p>
         </div>
 
-        {/* 3D Search Card - Updated Glass Effect */}
+        {/* 3D Search Card - Enhanced Glass Effect */}
         <div 
           ref={cardRef}
           style={{ 
              transform: `perspective(1000px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
              transition: 'transform 0.1s ease-out'
           }}
-          className="w-full max-w-3xl bg-white/20 backdrop-blur-2xl p-3 rounded-[2.5rem] shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] border border-white/30 animate-in slide-in-from-bottom-12 duration-1000 delay-300 relative overflow-hidden"
+          className="w-full max-w-3xl bg-white/10 backdrop-blur-3xl p-3 rounded-[2.5rem] shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] border border-white/20 animate-in slide-in-from-bottom-12 duration-1000 delay-300 relative overflow-hidden"
         >
           {/* Subtle sheen effect */}
           <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none rounded-[2.5rem]"></div>
 
           <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-3 relative z-10">
             
-            <div className="flex-1 relative group bg-white/20 backdrop-blur-md rounded-[2rem] hover:bg-white/40 transition-all duration-300 border border-white/20 hover:border-accent-200/50 shadow-inner">
-              <div className="absolute left-6 top-1/2 -translate-y-1/2 text-accent-500">
+            <div className="flex-1 relative group bg-white/10 backdrop-blur-lg rounded-[2rem] hover:bg-white/20 transition-all duration-300 border border-white/10 hover:border-white/30 shadow-inner">
+              <div className="absolute left-6 top-1/2 -translate-y-1/2 text-accent-400">
                 <Navigation size={24} />
               </div>
               <div className="flex flex-col justify-center h-full px-16 py-4">
-                <label className="text-[10px] uppercase font-bold text-white/70 tracking-wider mb-0.5">Origin</label>
+                <label className="text-[10px] uppercase font-bold text-white/60 tracking-wider mb-0.5">Origin</label>
                 <input 
                   id="origin-input"
                   type="text"
@@ -154,34 +154,34 @@ const Hero: React.FC<HeroProps> = ({ onSearch, isLoading, labels }) => {
                     setOrigin(e.target.value);
                     if(useCurrentLocation) setUseCurrentLocation(false);
                   }}
-                  className="w-full bg-transparent text-white font-bold placeholder-white/50 focus:outline-none text-lg"
+                  className="w-full bg-transparent text-white font-bold placeholder-white/30 focus:outline-none text-lg"
                   required
                 />
               </div>
               <button 
                 type="button"
                 onClick={() => setUseCurrentLocation(!useCurrentLocation)}
-                className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-white/20 transition-colors ${useCurrentLocation ? 'text-accent-400 bg-white/10' : 'text-white/50'}`}
+                className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-white/20 transition-colors ${useCurrentLocation ? 'text-accent-400 bg-white/10' : 'text-white/40'}`}
                 title="Use Current Location"
               >
                 <MapPin size={20} />
               </button>
             </div>
 
-            <div className="hidden md:block w-px bg-white/30 my-3"></div>
+            <div className="hidden md:block w-px bg-white/20 my-3"></div>
 
-            <div className="flex-1 relative group bg-white/20 backdrop-blur-md rounded-[2rem] hover:bg-white/40 transition-all duration-300 border border-white/20 hover:border-accent-200/50 shadow-inner">
-              <div className="absolute left-6 top-1/2 -translate-y-1/2 text-accent-500">
+            <div className="flex-1 relative group bg-white/10 backdrop-blur-lg rounded-[2rem] hover:bg-white/20 transition-all duration-300 border border-white/10 hover:border-white/30 shadow-inner">
+              <div className="absolute left-6 top-1/2 -translate-y-1/2 text-accent-400">
                 <Search size={24} />
               </div>
               <div className="flex flex-col justify-center h-full px-16 py-4">
-                <label className="text-[10px] uppercase font-bold text-white/70 tracking-wider mb-0.5">Destination</label>
+                <label className="text-[10px] uppercase font-bold text-white/60 tracking-wider mb-0.5">Destination</label>
                 <input 
                   type="text" 
                   placeholder={labels.toPlaceholder}
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
-                  className="w-full bg-transparent text-white font-bold placeholder-white/50 focus:outline-none text-lg"
+                  className="w-full bg-transparent text-white font-bold placeholder-white/30 focus:outline-none text-lg"
                   required
                 />
               </div>
@@ -190,7 +190,7 @@ const Hero: React.FC<HeroProps> = ({ onSearch, isLoading, labels }) => {
             <button 
               type="submit" 
               disabled={isLoading}
-              className="bg-slate-900/90 backdrop-blur-md hover:bg-accent-600 text-white font-bold text-lg rounded-[2rem] px-10 py-5 md:py-0 transition-all shadow-lg hover:shadow-accent-500/30 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 md:min-w-[180px] hover:scale-105 active:scale-95 border border-white/10"
+              className="bg-slate-900/80 backdrop-blur-xl hover:bg-accent-600 text-white font-bold text-lg rounded-[2rem] px-10 py-5 md:py-0 transition-all shadow-lg hover:shadow-accent-500/30 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3 md:min-w-[180px] hover:scale-105 active:scale-95 border border-white/20"
             >
               {isLoading ? (
                 <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>

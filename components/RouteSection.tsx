@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Plane, Train, Car, Bus, Clock, DollarSign, MapIcon, ChevronRight, Star } from './Icons';
 import { DestinationData, TranslationLabels } from '../types';
@@ -39,10 +40,25 @@ const RouteSection: React.FC<RouteSectionProps> = ({ data, origin, labels }) => 
   
   const getButtonText = (mode: string) => {
      const m = mode.toLowerCase();
-     if (m.includes('train') || m.includes('rail') || m.includes('flight') || m.includes('bus')) {
-         return "Book Tickets";
-     }
-     return "View Route";
+     if (m.includes('train') || m.includes('rail')) return "Book Train Tickets";
+     if (m.includes('flight') || m.includes('air')) return "Search Flights";
+     if (m.includes('bus')) return "Book Bus Tickets";
+     return "View Directions";
+  };
+
+  const openUber = () => {
+    const pickup = data.originCoordinates;
+    const dropoff = data.coordinates; // Destination coords
+    
+    // Fallback if coords are 0,0 (though unlikely with Gemini schema)
+    const pLat = pickup?.lat || '';
+    const pLng = pickup?.lng || '';
+    const dLat = dropoff?.lat || '';
+    const dLng = dropoff?.lng || '';
+
+    const url = `https://m.uber.com/ul/?action=setPickup&pickup[latitude]=${pLat}&pickup[longitude]=${pLng}&pickup[nickname]=${encodeURIComponent(origin)}&dropoff[latitude]=${dLat}&dropoff[longitude]=${dLng}&dropoff[nickname]=${encodeURIComponent(data.destinationName)}`;
+    
+    window.open(url, '_blank');
   };
 
   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(data.destinationName)}`;
@@ -70,6 +86,8 @@ const RouteSection: React.FC<RouteSectionProps> = ({ data, origin, labels }) => 
         {data.routes.map((route, index) => {
           const isPremium = route.category === 'Premium';
           const bookingUrl = getBookingUrl(route.mode, origin, data.destinationName);
+          const modeLower = route.mode.toLowerCase();
+          const isCar = modeLower.includes('car') || modeLower.includes('taxi') || modeLower.includes('drive') || modeLower.includes('cab');
           
           return (
             <div key={index} className={`relative rounded-2xl p-6 shadow-sm border transition-all hover:shadow-lg ${isPremium ? 'bg-indigo-50/50 border-indigo-100' : 'bg-white border-slate-100'}`}>
@@ -111,20 +129,34 @@ const RouteSection: React.FC<RouteSectionProps> = ({ data, origin, labels }) => 
                   </div>
                   <p className="text-slate-600 text-sm md:text-base">{route.details}</p>
                   
-                  {/* Direct Booking Button */}
-                  <a 
-                    href={bookingUrl}
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className={`mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                      isPremium 
-                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200' 
-                        : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200'
-                    } shadow-md`}
-                  >
-                    {getButtonText(route.mode)}
-                    <ChevronRight size={16} />
-                  </a>
+                  {/* Buttons Row */}
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <a 
+                        href={bookingUrl}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-md ${
+                        isPremium 
+                            ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200' 
+                            : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200'
+                        }`}
+                    >
+                        {getButtonText(route.mode)}
+                        <ChevronRight size={16} />
+                    </a>
+
+                    {/* Specific "Book Cab" Button for car-based routes */}
+                    {isCar && (
+                        <button
+                            onClick={openUber}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-md"
+                        >
+                            Book Cab
+                            <Car size={16} />
+                        </button>
+                    )}
+                  </div>
+
                 </div>
               </div>
             </div>

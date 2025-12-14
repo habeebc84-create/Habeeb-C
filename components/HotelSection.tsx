@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Bed, Star, ChevronRight, DollarSign, SlidersHorizontal, ZoomIn, X, ChevronLeft, ImageIcon, MessageSquare, User, Send, ThumbsUp, Wifi, Waves, Dumbbell, Coffee, CircleParking, Tv, Car, Bus } from './Icons';
+import { Bed, Star, ChevronRight, DollarSign, SlidersHorizontal, ZoomIn, X, ChevronLeft, ImageIcon, MessageSquare, User, Send, ThumbsUp, Wifi, Waves, Dumbbell, Coffee, CircleParking, Tv, Car, Bus, Clock } from './Icons';
 import { DestinationData, TranslationLabels, Hotel, Review, Coordinates } from '../types';
 import { getHotelReviews } from '../services/geminiService';
 
@@ -23,6 +23,10 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
   const [reviews, setReviews] = useState<Record<string, Review[]>>({});
   const [loadingReviews, setLoadingReviews] = useState<Record<string, boolean>>({});
   
+  // Real-time pricing simulation
+  const [realTimePrices, setRealTimePrices] = useState<Record<string, string>>({});
+  const [loadingPrices, setLoadingPrices] = useState(true);
+
   // Review Form State
   const [newReviewAuthor, setNewReviewAuthor] = useState('');
   const [newReviewComment, setNewReviewComment] = useState('');
@@ -34,6 +38,51 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
       navigator.vibrate(pattern);
     }
   };
+
+  // Simulate fetching real-time prices
+  useEffect(() => {
+    setLoadingPrices(true);
+    setRealTimePrices({}); // Reset
+
+    const timer = setTimeout(() => {
+      const newPrices: Record<string, string> = {};
+      
+      data.hotels.forEach(h => {
+        // Extract numeric value and currency
+        let value = 0;
+        let currency = '$';
+        
+        const inrMatch = h.priceEstimate.match(/₹\s?([\d,]+)/);
+        const dollarMatch = h.priceEstimate.match(/\$\s?([\d,]+)/);
+        const euroMatch = h.priceEstimate.match(/€\s?([\d,]+)/);
+        
+        if (inrMatch) {
+            value = parseInt(inrMatch[1].replace(/,/g, ''), 10);
+            currency = '₹';
+        } else if (dollarMatch) {
+            value = parseInt(dollarMatch[1].replace(/,/g, ''), 10);
+            currency = '$';
+        } else if (euroMatch) {
+            value = parseInt(euroMatch[1].replace(/,/g, ''), 10);
+            currency = '€';
+        } else {
+             const match = h.priceEstimate.match(/(\d[\d,]*)/);
+             value = match ? parseInt(match[0].replace(/,/g, ''), 10) : 0;
+        }
+
+        // Apply dynamic pricing variation (+/- 15%)
+        const variation = 1 + (Math.random() * 0.3 - 0.15); 
+        const newValue = Math.round(value * variation);
+        
+        newPrices[h.name] = `${currency} ${newValue.toLocaleString()}`;
+      });
+
+      setRealTimePrices(newPrices);
+      setLoadingPrices(false);
+    }, 1500); // 1.5s delay for effect
+
+    return () => clearTimeout(timer);
+  }, [data.hotels]);
 
   const getBookingUrl = (hotelName: string, destination: string) => {
     const query = encodeURIComponent(`${hotelName} ${destination}`);
@@ -76,30 +125,36 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
 
   const hotelData = useMemo(() => {
     return data.hotels.map(h => {
-      // First try to find INR price
-      const inrMatch = h.priceEstimate.match(/₹\s?([\d,]+)/);
+      // Use real-time price if available, otherwise static
+      const effectivePriceStr = realTimePrices[h.name] || h.priceEstimate;
+
+      // Parse logic
+      const inrMatch = effectivePriceStr.match(/₹\s?([\d,]+)/);
       if (inrMatch) {
         return {
           ...h,
+          priceEstimate: effectivePriceStr,
           parsedPrice: parseInt(inrMatch[1].replace(/,/g, ''), 10)
         };
       }
       
-      const dollarMatch = h.priceEstimate.match(/\$\s?([\d,]+)/);
+      const dollarMatch = effectivePriceStr.match(/\$\s?([\d,]+)/);
       if (dollarMatch) {
         return {
           ...h,
+          priceEstimate: effectivePriceStr,
           parsedPrice: parseInt(dollarMatch[1].replace(/,/g, ''), 10)
         };
       }
       
-      const match = h.priceEstimate.match(/(\d[\d,]*)/);
+      const match = effectivePriceStr.match(/(\d[\d,]*)/);
       return {
         ...h,
+        priceEstimate: effectivePriceStr,
         parsedPrice: match ? parseInt(match[0].replace(/,/g, ''), 10) : 0
       };
     });
-  }, [data.hotels]);
+  }, [data.hotels, realTimePrices]);
 
   const { minPrice, maxDataPrice, currencySymbol } = useMemo(() => {
     const prices = hotelData.map(h => h.parsedPrice).filter(p => p > 0);
@@ -111,6 +166,7 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
 
   const [priceFilter, setPriceFilter] = useState<number>(maxDataPrice);
 
+  // Update slider when max price changes (due to real-time update)
   useEffect(() => {
     setPriceFilter(maxDataPrice);
   }, [maxDataPrice]);
@@ -263,9 +319,18 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
             </div>
           )}
 
-          <div className="flex items-center gap-2 text-slate-700 font-medium mb-4 bg-slate-50 p-2 rounded-lg text-sm">
+          <div className="flex items-center gap-2 text-slate-700 font-medium mb-4 bg-slate-50 p-2 rounded-lg text-sm min-h-[44px]">
               <DollarSign size={14} />
-              {hotel.priceEstimate} / night
+              {loadingPrices ? (
+                <div className="h-4 w-24 bg-slate-200 animate-pulse rounded"></div>
+              ) : (
+                <div className="flex items-center gap-2 animate-in fade-in duration-300">
+                  <span>{hotel.priceEstimate} / night</span>
+                  {!loadingPrices && (
+                    <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold animate-pulse">Live</span>
+                  )}
+                </div>
+              )}
           </div>
 
           <div className="mt-auto grid grid-cols-2 gap-2">
@@ -315,7 +380,15 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
             <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
               <Bed size={24} />
             </div>
-            <h2 className="text-2xl font-serif font-bold text-slate-800">{labels.hotelsHeader}</h2>
+            <div>
+              <h2 className="text-2xl font-serif font-bold text-slate-800">{labels.hotelsHeader}</h2>
+              {loadingPrices && (
+                <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                  <div className="w-3 h-3 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></div>
+                  Fetching real-time deals...
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 w-full md:w-72">
@@ -339,7 +412,8 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
                 setPriceFilter(Number(e.target.value));
                 if (Number(e.target.value) % 50 === 0) triggerHaptic(5); // Tactile feedback on slider
               }}
-              className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+              disabled={loadingPrices}
+              className={`w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30 ${loadingPrices ? 'opacity-50 cursor-wait' : ''}`}
             />
             
             <div className="flex justify-between text-xs text-slate-400 mt-2 font-medium">
@@ -361,7 +435,7 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
             </div>
           ) : (
             <div className="bg-slate-50 border border-slate-100 rounded-xl p-8 text-center text-slate-500 italic">
-              No luxury options within this price range.
+              {loadingPrices ? "Updating availability..." : "No luxury options within this price range."}
             </div>
           )}
         </div>
@@ -378,7 +452,7 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
             </div>
           ) : (
             <div className="bg-slate-50 border border-slate-100 rounded-xl p-8 text-center text-slate-500 italic">
-              No budget options within this price range.
+              {loadingPrices ? "Updating availability..." : "No budget options within this price range."}
             </div>
           )}
         </div>

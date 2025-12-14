@@ -258,8 +258,8 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen pb-20 font-sans animate-in fade-in duration-500">
       
-      {/* Header / Nav */}
-      <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-white/20 shadow-sm transition-all duration-300">
+      {/* Header / Nav - Enhanced Glass */}
+      <header className="fixed top-0 w-full z-50 bg-white/60 backdrop-blur-xl border-b border-white/30 shadow-sm transition-all duration-300 supports-[backdrop-filter]:bg-white/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <button onClick={() => setView('welcome')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Compass className="text-accent-500" size={28} />
@@ -267,7 +267,7 @@ const App: React.FC = () => {
           </button>
           
           <div className="flex items-center gap-4">
-             {/* Settings Dropdown */}
+             {/* Settings Dropdown - Enhanced Glass */}
              <div className="relative" ref={settingsRef}>
                <button 
                  onClick={() => setShowSettings(!showSettings)}
@@ -278,10 +278,10 @@ const App: React.FC = () => {
                </button>
                
                {showSettings && (
-                 <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                 <div className="absolute right-0 mt-2 w-72 bg-white/80 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/50 p-4 animate-in fade-in zoom-in-95 duration-200 origin-top-right ring-1 ring-black/5">
                     
                     <div className="mb-4">
-                      <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">
+                      <div className="flex items-center gap-2 text-slate-600 text-xs font-bold uppercase tracking-wider mb-2">
                         <Languages size={14} />
                         <span>{labels.languageLabel}</span>
                       </div>
@@ -290,7 +290,7 @@ const App: React.FC = () => {
                           <button
                             key={lang.code}
                             onClick={() => setLanguage(lang.code)}
-                            className={`text-sm py-1.5 px-3 rounded-lg text-left transition-colors ${language === lang.code ? 'bg-brand-50 text-brand-700 font-medium' : 'hover:bg-slate-50 text-slate-600'}`}
+                            className={`text-sm py-1.5 px-3 rounded-lg text-left transition-colors ${language === lang.code ? 'bg-brand-50/50 text-brand-700 font-medium ring-1 ring-brand-200' : 'hover:bg-slate-50/80 text-slate-600'}`}
                           >
                             {lang.name}
                           </button>
@@ -298,8 +298,8 @@ const App: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="border-t border-slate-100 pt-4">
-                      <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">
+                    <div className="border-t border-slate-200/50 pt-4">
+                      <div className="flex items-center gap-2 text-slate-600 text-xs font-bold uppercase tracking-wider mb-2">
                         <Type size={14} />
                         <span>{labels.typographyLabel}</span>
                       </div>
@@ -308,7 +308,7 @@ const App: React.FC = () => {
                           <button
                             key={font.id}
                             onClick={() => setFontId(font.id)}
-                            className={`w-full text-sm py-2 px-3 rounded-lg flex items-center justify-between transition-colors ${fontId === font.id ? 'bg-brand-50 text-brand-700' : 'hover:bg-slate-50 text-slate-600'}`}
+                            className={`w-full text-sm py-2 px-3 rounded-lg flex items-center justify-between transition-colors ${fontId === font.id ? 'bg-brand-50/50 text-brand-700 ring-1 ring-brand-200' : 'hover:bg-slate-50/80 text-slate-600'}`}
                           >
                             <span className="font-medium">{labels[font.translationKey as keyof TranslationLabels] || font.id}</span>
                             <span className="text-xs opacity-50" style={{ fontFamily: font.sans }}>Ag</span>
@@ -333,7 +333,7 @@ const App: React.FC = () => {
       <main id="content-start" className="max-w-6xl mx-auto px-4 -mt-20 relative z-20 mb-20">
         
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-8 text-center shadow-lg animate-in fade-in slide-in-from-top-4">
+          <div className="bg-red-50/90 backdrop-blur-md border border-red-200 text-red-700 p-4 rounded-xl mb-8 text-center shadow-lg animate-in fade-in slide-in-from-top-4">
             <p className="font-semibold">Oops!</p>
             {error}
           </div>
@@ -343,7 +343,7 @@ const App: React.FC = () => {
           <div className="bg-white/50 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/40 overflow-hidden min-h-[600px]">
             
             {/* Destination Header */}
-            <div className="bg-white p-6 md:p-8 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="bg-white/60 p-6 md:p-8 border-b border-white/50 flex flex-col md:flex-row justify-between items-center gap-4">
               <div>
                 <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-900">{data.destinationName}</h1>
                 <div className="flex items-center gap-2 text-slate-500 mt-1">
@@ -351,14 +351,14 @@ const App: React.FC = () => {
                   <span>{labels.from} {origin}</span>
                 </div>
               </div>
-              <div className="flex gap-2 bg-slate-100 p-1.5 rounded-xl overflow-x-auto max-w-full">
+              <div className="flex gap-2 bg-slate-100/50 p-1.5 rounded-xl overflow-x-auto max-w-full border border-white/50">
                 {tabs.map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                       activeTab === tab.id 
-                        ? 'bg-white text-brand-600 shadow-sm' 
+                        ? 'bg-white text-brand-600 shadow-sm ring-1 ring-black/5' 
                         : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                     }`}
                   >
@@ -384,7 +384,7 @@ const App: React.FC = () => {
 
         {!data && !loading && !error && (
           <div className="text-center py-20 opacity-60">
-             <div className="w-16 h-16 bg-slate-200 rounded-full mx-auto flex items-center justify-center mb-4 text-slate-400">
+             <div className="w-16 h-16 bg-slate-200/50 backdrop-blur-sm rounded-full mx-auto flex items-center justify-center mb-4 text-slate-400">
                <Compass size={32} />
              </div>
              <p className="text-xl font-serif text-slate-600">Enter a destination to start your journey.</p>
