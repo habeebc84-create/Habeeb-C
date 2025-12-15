@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   MapPin, 
@@ -15,6 +14,7 @@ import {
   Info,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
   Search,
   Map as MapIcon,
   Compass,
@@ -40,7 +40,8 @@ import {
   Sunrise,
   Sun,
   Moon,
-  Globe
+  Globe,
+  BarChart3
 } from 'lucide-react';
 
 export { 
@@ -58,6 +59,7 @@ export {
   Info,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
   Search,
   MapIcon,
   Compass,
@@ -83,5 +85,6 @@ export {
   Sunrise,
   Sun,
   Moon,
-  Globe
+  Globe,
+  BarChart3
 };
