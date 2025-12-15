@@ -9,7 +9,7 @@ import MapSection from './components/MapSection';
 import HotelSection from './components/HotelSection';
 import { generateTravelGuide, getTrendingDestinations } from './services/geminiService';
 import { DestinationData, TranslationLabels, SuggestedDestination } from './types';
-import { Compass, MapPin, History, Utensils, Camera, MapIcon, Settings, Languages, Type, Bed, ChevronRight, DollarSign, Star, Globe } from './components/Icons';
+import { Compass, MapPin, Settings, Languages, Type, ChevronRight, Star, Globe, History, Train, Bed, MapIcon, Camera, Utensils } from './components/Icons';
 import { LANGUAGES, FONTS, TRANSLATIONS } from './constants';
 
 const BACKGROUND_IMAGES = [
@@ -39,8 +39,10 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [origin, setOrigin] = useState<string>('');
-  const [activeTab, setActiveTab] = useState('overview');
   const [imageSeed, setImageSeed] = useState<number>(Date.now());
+  
+  // Tab State
+  const [activeTab, setActiveTab] = useState<'overview' | 'journey' | 'hotels' | 'map' | 'attractions' | 'food'>('overview');
   
   // Trending Suggestions State
   const [suggestions, setSuggestions] = useState<SuggestedDestination[]>([]);
@@ -123,6 +125,7 @@ const App: React.FC = () => {
     setError(null);
     setData(null);
     setOrigin(originInput);
+    setActiveTab('overview'); // Reset tab to overview on new search
 
     try {
       // Update seed to ensure fresh images
@@ -141,13 +144,13 @@ const App: React.FC = () => {
   };
 
   const tabs = [
-    { id: 'overview', label: labels.tabOverview, icon: <History size={18} /> },
-    { id: 'journey', label: labels.tabJourney, icon: <MapIcon size={18} /> },
-    { id: 'hotels', label: labels.tabHotels, icon: <Bed size={18} /> },
-    { id: 'map', label: labels.tabMap, icon: <Compass size={18} /> },
-    { id: 'attractions', label: labels.tabAttractions, icon: <Camera size={18} /> },
-    { id: 'food', label: labels.tabFood, icon: <Utensils size={18} /> },
-  ];
+    { id: 'overview', label: labels.tabOverview, icon: History },
+    { id: 'journey', label: labels.tabJourney, icon: Train },
+    { id: 'hotels', label: labels.tabHotels, icon: Bed },
+    { id: 'map', label: labels.tabMap, icon: MapIcon },
+    { id: 'attractions', label: labels.tabAttractions, icon: Camera },
+    { id: 'food', label: labels.tabFood, icon: Utensils },
+  ] as const;
 
   // Welcome / Front Page Component
   if (view === 'welcome') {
@@ -256,7 +259,7 @@ const App: React.FC = () => {
 
   // Main Application
   return (
-    <div className="min-h-screen pb-20 font-sans animate-in fade-in duration-500">
+    <div className="min-h-screen pb-20 font-sans animate-in fade-in duration-500 bg-slate-50">
       
       {/* Header / Nav - Enhanced Glass */}
       <header className="fixed top-0 w-full z-50 bg-white/60 backdrop-blur-xl border-b border-white/30 shadow-sm transition-all duration-300 supports-[backdrop-filter]:bg-white/60">
@@ -330,53 +333,79 @@ const App: React.FC = () => {
       </div>
 
       {/* Content Area */}
-      <main id="content-start" className="max-w-6xl mx-auto px-4 -mt-20 relative z-20 mb-20">
+      <main id="content-start" className="max-w-7xl mx-auto px-4 -mt-20 relative z-20 mb-20">
         
         {error && (
-          <div className="bg-red-50/90 backdrop-blur-md border border-red-200 text-red-700 p-4 rounded-xl mb-8 text-center shadow-lg animate-in fade-in slide-in-from-top-4">
+          <div className="bg-red-50/90 backdrop-blur-md border border-red-200 text-red-700 p-4 rounded-xl mb-8 text-center shadow-lg animate-in fade-in slide-in-from-top-4 max-w-2xl mx-auto">
             <p className="font-semibold">Oops!</p>
             {error}
           </div>
         )}
 
         {data && (
-          <div className="bg-white/50 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/40 overflow-hidden min-h-[600px]">
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/40 overflow-hidden min-h-[700px] flex flex-col">
             
             {/* Destination Header */}
-            <div className="bg-white/60 p-6 md:p-8 border-b border-white/50 flex flex-col md:flex-row justify-between items-center gap-4">
-              <div>
-                <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-900">{data.destinationName}</h1>
-                <div className="flex items-center gap-2 text-slate-500 mt-1">
-                  <MapPin size={16} />
-                  <span>{labels.from} {origin}</span>
-                </div>
+            <div className="bg-white/60 p-6 md:px-8 md:pt-8 md:pb-4 border-b border-white/50">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <h1 className="text-3xl md:text-5xl font-serif font-bold text-slate-900 tracking-tight">{data.destinationName}</h1>
+                    <div className="flex items-center gap-2 text-slate-500 mt-2 font-medium">
+                      <MapPin size={18} className="text-brand-500" />
+                      <span>{labels.from} {origin}</span>
+                    </div>
+                  </div>
               </div>
-              <div className="flex gap-2 bg-slate-100/50 p-1.5 rounded-xl overflow-x-auto max-w-full border border-white/50">
-                {tabs.map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                      activeTab === tab.id 
-                        ? 'bg-white text-brand-600 shadow-sm ring-1 ring-black/5' 
-                        : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
-                    }`}
-                  >
-                    {tab.icon}
-                    {tab.label}
-                  </button>
-                ))}
+
+              {/* Navigation Tabs - Scrollable on mobile */}
+              <div className="mt-8 flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-6 px-6 md:mx-0 md:px-0">
+                 {tabs.map((tab) => {
+                   const isActive = activeTab === tab.id;
+                   const Icon = tab.icon;
+                   return (
+                     <button
+                       key={tab.id}
+                       onClick={() => setActiveTab(tab.id as any)}
+                       className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300 border ${
+                         isActive 
+                           ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-200 scale-105' 
+                           : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                       }`}
+                     >
+                       <Icon size={18} />
+                       {tab.label}
+                     </button>
+                   );
+                 })}
               </div>
             </div>
 
-            {/* Dynamic Content */}
-            <div className="p-6 md:p-10">
-              {activeTab === 'overview' && <HistorySection data={data} labels={labels} />}
-              {activeTab === 'journey' && <RouteSection data={data} origin={origin} labels={labels} />}
-              {activeTab === 'hotels' && <HotelSection data={data} labels={labels} />}
-              {activeTab === 'map' && <MapSection data={data} labels={labels} />}
-              {activeTab === 'attractions' && <AttractionsSection data={data} labels={labels} randomSeed={imageSeed} />}
-              {activeTab === 'food' && <FoodSection data={data} labels={labels} />}
+            {/* Dynamic Content Pages */}
+            <div className="p-6 md:p-10 bg-slate-50/50 flex-1 relative">
+              
+              <div className={activeTab === 'overview' ? 'block animate-in fade-in slide-in-from-bottom-2 duration-300' : 'hidden'}>
+                 <HistorySection data={data} labels={labels} />
+              </div>
+              
+              <div className={activeTab === 'journey' ? 'block animate-in fade-in slide-in-from-bottom-2 duration-300' : 'hidden'}>
+                 <RouteSection data={data} origin={origin} labels={labels} />
+              </div>
+
+              <div className={activeTab === 'hotels' ? 'block animate-in fade-in slide-in-from-bottom-2 duration-300' : 'hidden'}>
+                 <HotelSection data={data} labels={labels} />
+              </div>
+
+              <div className={activeTab === 'map' ? 'block animate-in fade-in slide-in-from-bottom-2 duration-300' : 'hidden'}>
+                 <MapSection data={data} labels={labels} />
+              </div>
+
+              <div className={activeTab === 'attractions' ? 'block animate-in fade-in slide-in-from-bottom-2 duration-300' : 'hidden'}>
+                 <AttractionsSection data={data} labels={labels} randomSeed={imageSeed} />
+              </div>
+
+              <div className={activeTab === 'food' ? 'block animate-in fade-in slide-in-from-bottom-2 duration-300' : 'hidden'}>
+                 <FoodSection data={data} labels={labels} />
+              </div>
             </div>
 
           </div>

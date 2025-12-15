@@ -19,6 +19,9 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [activeModalTab, setActiveModalTab] = useState<'gallery' | 'reviews'>('gallery');
   
+  // Booking Confirmation State
+  const [bookingConfirmation, setBookingConfirmation] = useState<{ hotelName: string; url: string } | null>(null);
+  
   // Real database of reviews fetched from API
   const [reviews, setReviews] = useState<Record<string, Review[]>>({});
   const [loadingReviews, setLoadingReviews] = useState<Record<string, boolean>>({});
@@ -87,6 +90,26 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
   const getBookingUrl = (hotelName: string, destination: string) => {
     const query = encodeURIComponent(`${hotelName} ${destination}`);
     return `https://www.booking.com/searchresults.html?ss=${query}`;
+  };
+
+  const handleBookClick = (e: React.MouseEvent, hotelName: string, destination: string) => {
+    e.preventDefault();
+    triggerHaptic(15);
+    const url = getBookingUrl(hotelName, destination);
+    setBookingConfirmation({ hotelName, url });
+  };
+
+  const confirmBooking = () => {
+    if (bookingConfirmation) {
+      triggerHaptic(20);
+      window.open(bookingConfirmation.url, '_blank', 'noopener,noreferrer');
+      setBookingConfirmation(null);
+    }
+  };
+
+  const cancelBooking = () => {
+    triggerHaptic(10);
+    setBookingConfirmation(null);
   };
 
   const openUber = (coords: Coordinates, name: string) => {
@@ -356,9 +379,7 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
             )}
             <a 
                 href={getBookingUrl(hotel.name, data.destinationName)}
-                target="_blank" 
-                rel="noopener noreferrer"
-                onClick={() => triggerHaptic(15)}
+                onClick={(e) => handleBookClick(e, hotel.name, data.destinationName)}
                 className={`col-span-2 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold bg-brand-600 text-white hover:bg-brand-700 transition-colors shadow-sm ${!hotel.coordinates ? 'col-span-2' : ''}`}
             >
                 {labels.bookRoom}
@@ -457,6 +478,32 @@ const HotelSection: React.FC<HotelSectionProps> = ({ data, labels }) => {
           )}
         </div>
       </div>
+
+      {/* Booking Confirmation Modal */}
+      {bookingConfirmation && (
+        <div className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Book your stay?</h3>
+              <p className="text-slate-600 mb-6">
+                You are about to leave the app to book <strong>{bookingConfirmation.hotelName}</strong> on Booking.com.
+              </p>
+              <div className="flex gap-3">
+                 <button 
+                   onClick={cancelBooking}
+                   className="flex-1 py-3 rounded-xl font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+                 >
+                   Cancel
+                 </button>
+                 <button 
+                   onClick={confirmBooking}
+                   className="flex-1 py-3 rounded-xl font-bold text-white bg-brand-600 hover:bg-brand-700 transition-colors shadow-lg shadow-brand-200"
+                 >
+                   Continue
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
 
       {/* Details Modal (Gallery + Reviews) */}
       {selectedHotel && (
